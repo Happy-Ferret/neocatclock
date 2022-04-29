@@ -83,13 +83,6 @@
 #endif
 
 /*
- *  Clock Mode -- type of clock displayed
- */
-#define CAT_CLOCK       2               /*  KitCat (R) clock face       */
-
-static int    clockMode;                /*  One of the above :-)        */
-
-/*
  *  Cat body part pixmaps
  */
 static Pixmap   *eyePixmap  = (Pixmap *)NULL;     /*  Array of eyes     */
@@ -209,7 +202,6 @@ typedef struct {
     int                 nTails;                 /*  Tail/eye resolution */
 
     int                 padding;                /*  Font spacing        */
-    char                *modeString;            /*  Display mode        */
 
     int                 update;                 /*  Seconds between     */
                                                 /*  updates             */
@@ -265,7 +257,6 @@ static Pixmap CreateEyePixmap(double);
 static void EraseHands(Widget, struct tm *);
 static void HandleExpose(Widget, XtPointer, XtPointer);
 static void HandleInput(Widget, XtPointer, XtPointer);
-static void HandleResize(Widget, XtPointer, XtPointer);
 static void Tick(Widget, int);
 static void AlarmSetCallback(Widget, XtPointer, XtPointer);
 static void AlarmBellCallback(Widget, XtPointer, XtPointer);
@@ -358,10 +349,6 @@ int main(argc, argv)
           XtOffset(ApplicationDataPtr, chime),
           XtRImmediate, (XtPointer)False },
 
-        { "mode", "Mode", XtRString, sizeof(char *),
-          XtOffset(ApplicationDataPtr, modeString),
-          XtRImmediate, (XtPointer)"cat"},
-
         { "help", "Help", XtRBoolean, sizeof(Boolean),
           XtOffset(ApplicationDataPtr, help),
           XtRImmediate, (XtPointer)False},
@@ -388,7 +375,6 @@ int main(argc, argv)
         { "-tiecolor",    "*tieColor",     XrmoptionSepArg, (XtPointer)NULL },
 
         { "-padding",     "*padding",      XrmoptionSepArg, (XtPointer)NULL },
-        { "-mode",        "*mode",         XrmoptionSepArg, (XtPointer)NULL },
         { "-ntails",      "*nTails",       XrmoptionSepArg, (XtPointer)NULL },
         { "-update",      "*update",       XrmoptionSepArg, (XtPointer)NULL },
         { "-alarm",       "*alarm",        XrmoptionNoArg,  (XtPointer)"on" },
@@ -440,15 +426,6 @@ int main(argc, argv)
     XtGetValues(topLevel, args, n);
 
     /*
-     *  Get/set clock mode
-     */
-    if (strcmp(appData.modeString, "cat") == 0) {
-        clockMode = CAT_CLOCK;
-    } else {
-        clockMode = CAT_CLOCK;
-    }
-
-    /*
      *  Create icon pixmap
      */
     {
@@ -456,14 +433,10 @@ int main(argc, argv)
         char    *data;
         u_int    width = 0, height = 0;
     
-        switch (clockMode) {
-            case CAT_CLOCK : {
-                data   = cat_bits;
-                width  = cat_width;
-                height = cat_height;
-                break;
-            }
-        }
+
+        data   = cat_bits;
+        width  = cat_width;
+        height = cat_height;
 
         iconPixmap = XCreateBitmapFromData(dpy, root,
                                            data, width, height);
@@ -491,42 +464,33 @@ int main(argc, argv)
     }
 
     /*
-     *  Set mode-dependent stuff
+     *  Padding is space between clock face and
+     *  edge of cat's belly.
      */
-    switch (clockMode) {
-        case CAT_CLOCK : {
-            /*
-             *  Padding is space between clock face and
-             *  edge of cat's belly.
-             */
-            if (appData.padding == UNINIT) {
-                appData.padding = DEF_ANALOG_PADDING;
-            }
-        
-            /*
-             *  Bound the number of tails
-             */
-            if (appData.nTails < 1) {
-                appData.nTails = 1;
-            }
-            if (appData.nTails > 60) {
-                appData.nTails = 60;
-            }
-        
-            /*
-             *  Update rate depends on number of tails,
-             *  so tail swings at approximately 60 hz.
-             */
-            appData.update = (int)(0.5 + 1000.0 / appData.nTails);
-        
-            /*
-             *  Drawing the second hand on the cat is ugly.
-             */
-            showSecondHand = False;
-
-            break;
-        }
+    if (appData.padding == UNINIT) {
+        appData.padding = DEF_ANALOG_PADDING;
     }
+        
+    /*
+     *  Bound the number of tails
+     */
+    if (appData.nTails < 1) {
+        appData.nTails = 1;
+    }
+    if (appData.nTails > 60) {
+        appData.nTails = 60;
+    }
+        
+    /*
+     *  Update rate depends on number of tails,
+     *  so tail swings at approximately 60 hz.
+     */
+    appData.update = (int)(0.5 + 1000.0 / appData.nTails);
+        
+    /*
+     *  Drawing the second hand on the cat is ugly.
+     */
+    showSecondHand = False;
     
     /*
      *  "ParseGeometry"  looks at the user-specified geometry
@@ -602,27 +566,23 @@ int main(argc, argv)
     /*
      *  Set the sizes of the hands
      */
-    switch (clockMode) {
-        case CAT_CLOCK : {
-            winWidth  = DEF_CAT_WIDTH;
-            winHeight = DEF_CAT_HEIGHT;
+
+    winWidth  = DEF_CAT_WIDTH;
+    winHeight = DEF_CAT_HEIGHT;
         
-            radius = Round((min(winWidth,
-                                winHeight)-(2 * appData.padding)) / 3.45);
+    radius = Round((min(winWidth,
+                        winHeight)-(2 * appData.padding)) / 3.45);
         
-            secondHandLength =  ((SECOND_HAND_FRACT  * radius)  / 100);
-            minuteHandLength =  ((MINUTE_HAND_FRACT  * radius)  / 100);
-            hourHandLength   =  ((HOUR_HAND_FRACT    * radius)  / 100);
+    secondHandLength =  ((SECOND_HAND_FRACT  * radius)  / 100);
+    minuteHandLength =  ((MINUTE_HAND_FRACT  * radius)  / 100);
+    hourHandLength   =  ((HOUR_HAND_FRACT    * radius)  / 100);
         
-            handWidth        =  ((HAND_WIDTH_FRACT   * radius) / 100) * 2;
-            secondHandWidth  =  ((SECOND_WIDTH_FRACT * radius) / 100);
+    handWidth        =  ((HAND_WIDTH_FRACT   * radius) / 100) * 2;
+    secondHandWidth  =  ((SECOND_WIDTH_FRACT * radius) / 100);
         
-            centerX = winWidth  / 2;
-            centerY = winHeight / 2;
-        
-            break;
-        }
-    }
+    centerX = winWidth  / 2;
+    centerY = winHeight / 2;
+
     
     /*
      *  Create the GC's
@@ -687,29 +647,25 @@ int main(argc, argv)
     SetBell(appData.alarmBell ? appData.alarmBellPeriod : 0);
     
     /*
-     *  Create cat pixmaps, etc. if in CAT_CLOCK mode
+     *  Create cat pixmaps, etc.
      */
-    if (clockMode == CAT_CLOCK) {
-        InitializeCat(appData.catColor,
-                      appData.detailColor,
-                      appData.tieColor);
-    }
+
+    InitializeCat(appData.catColor,
+                  appData.detailColor,
+                  appData.tieColor);
 
     /*
      *  Finally, install necessary callbacks
      */
     {
         XtAddCallback(canvas, XmNexposeCallback, HandleExpose, NULL);
-        XtAddCallback(canvas, XmNresizeCallback, HandleResize, NULL);
         XtAddCallback(canvas, XmNinputCallback,  HandleInput,  NULL);
     }
 
 #if WITH_TEMPO_TRACKER
-    if (clockMode == CAT_CLOCK) {
-      pthread_t thread;
-      void *arg;
-      pthread_create(&thread, NULL, TempoTrackerThread, arg);
-    }
+    pthread_t thread;
+    void *arg;
+    pthread_create(&thread, NULL, TempoTrackerThread, arg);
 #endif
 
     /*
@@ -827,89 +783,33 @@ static void ParseGeometry(topLevel, stringWidth, stringAscent, stringDescent)
      */
     geometry = malloc(80);
 
-    switch (clockMode) {
-        case CAT_CLOCK : {
-            if (geomString == NULL) {
-                /* 
-                 *  User didn't specify any geometry, so we
-                 *  use the default.
-                 */
-                sprintf(geometry, "%dx%d", DEF_CAT_WIDTH, DEF_CAT_HEIGHT);
-            } else {
-                /*
-                 *  Gotta do some work.
-                 */
-                int          x, y;
-                unsigned int width, height;
-                int          geomMask;
-        
-                /*
-                 *  Find out what's been set
-                 */
-                geomMask = XParseGeometry(geomString,
-                                          &x, &y, &width, &height);
-        
-                /*
-                 *  Fix the cat width and height
-                 */
-                sprintf(widthString,  "%d",  DEF_CAT_WIDTH);
-                sprintf(heightString, "x%d", DEF_CAT_HEIGHT);
-        
-                /*
-                 *  Use the x and y values, if any
-                 */
-                if (!(geomMask & XValue)) {
-                    strcpy(xString, "");
-                } else {
-                    if (geomMask & XNegative) {
-                        sprintf(xString, "-%d", x);
-                    } else {
-                        sprintf(xString, "+%d", x);
-                    }
-                }
-        
-                if (!(geomMask & YValue)) {
-                    strcpy(yString, "");
-                } else {
-                    if (geomMask & YNegative) {
-                        sprintf(yString, "-%d", y);
-                    } else {
-                        sprintf(yString, "+%d", y);
-                    }
-                }
-        
-                /*
-                 *  Put them all together
-                 */        
-                geometry[0] = '\0';
-                strcat(geometry, widthString);
-                strcat(geometry, heightString);
-                strcat(geometry, xString);
-                strcat(geometry, yString);
-            }
-        
-            /*
-             *  Stash the width and height in some globals (ugh!)
-             */
-            sscanf(geometry, "%dx%d", &winWidth, &winHeight);
-        
-            /*
-             *  Set the geometry of the topLevel widget
-             */
-            n = 0;
-            XtSetArg(args[n], XmNwidth,     DEF_CAT_WIDTH);    n++;
-            XtSetArg(args[n], XmNheight,    DEF_CAT_HEIGHT);   n++;
-            XtSetArg(args[n], XmNminWidth,  DEF_CAT_WIDTH);    n++;
-            XtSetArg(args[n], XmNminHeight, DEF_CAT_HEIGHT);   n++;
-            XtSetArg(args[n], XmNmaxWidth,  DEF_CAT_WIDTH);    n++;
-            XtSetArg(args[n], XmNmaxHeight, DEF_CAT_HEIGHT);   n++;
-            XtSetArg(args[n], XmNgeometry,  geometry);         n++;
-            XtSetValues(topLevel, args, n);
-        
-            break;
+    if (geomString == NULL) {
+        /* 
+         *  User didn't specify any geometry, so we
+         *  use the default.
+         */
+        sprintf(geometry, "%dx%d", DEF_CAT_WIDTH, DEF_CAT_HEIGHT);
         }
-    }
-}    
+
+    /*
+     *  Stash the width and height in some globals (ugh!)
+     */
+    sscanf(geometry, "%dx%d", &winWidth, &winHeight);
+        
+    /*
+     *  Set the geometry of the topLevel widget
+     */
+    n = 0;
+    XtSetArg(args[n], XmNwidth,     DEF_CAT_WIDTH);    n++;
+    XtSetArg(args[n], XmNheight,    DEF_CAT_HEIGHT);   n++;
+    XtSetArg(args[n], XmNminWidth,  DEF_CAT_WIDTH);    n++;
+    XtSetArg(args[n], XmNminHeight, DEF_CAT_HEIGHT);   n++;
+    XtSetArg(args[n], XmNmaxWidth,  DEF_CAT_WIDTH);    n++;
+    XtSetArg(args[n], XmNmaxHeight, DEF_CAT_HEIGHT);   n++;
+    XtSetArg(args[n], XmNgeometry,  geometry);         n++;
+    XtSetValues(topLevel, args, n);
+
+}
 
 /*
  *  DrawLine - Draws a line.
@@ -1104,14 +1004,9 @@ static void DrawClockFace(secondHand, radius)
     segBufPtr = segBuf;
     numSegs = 0;
     
-    switch (clockMode) {
-        case CAT_CLOCK : {
-            XFillRectangle(dpy, clockWindow, catGC, 
-                           0, 0, winWidth, winHeight);
 
-            break;
-        }
-    }
+    XFillRectangle(dpy, clockWindow, catGC, 
+                   0, 0, winWidth, winHeight);
     
     segBufPtr = segBuf;
     numSegs = 0;
@@ -1131,7 +1026,6 @@ static void Syntax(call)
     char *call;
 {
     printf("Usage: %s [toolkitoptions]\n", call);
-    printf("       [-mode cat>]\n");
     printf("       [-alarm]  [-bell]  [-chime]\n");
     printf("       [-file <alarm file>]  [-period <seconds>]\n");
     printf("       [-hl <color>]  [-hd <color>]\n");
@@ -1636,14 +1530,9 @@ static void HandleExpose(w, clientData, _callData)
     }
 
     /*
-     *  Redraw the clock face in the correct mode
+     *  Redraw the clock face
      */
-    switch (clockMode) {
-        case CAT_CLOCK : {
-            DrawClockFace(secondHandLength, radius);
-            break;
-        }
-    }
+    DrawClockFace(secondHandLength, radius);
 
     /*
      *  Call the Tick routine so that the face gets
@@ -1680,12 +1569,7 @@ static void Tick(w, add)
      *  If ticking is to continue, add the next timeout
      */
     if (add) {
-        switch (clockMode) {
-            case CAT_CLOCK : {
-                XtAppAddTimeOut(appContext, appData.update, Tick, w);
-                break;
-            }
-        }
+        XtAppAddTimeOut(appContext, appData.update, Tick, w);
     }
 
     /*
@@ -1704,86 +1588,75 @@ static void Tick(w, add)
         }
     }
     
-    switch (clockMode) {
-        case CAT_CLOCK    : {
-            /*
-             *  The second (or minute) hand is sec (or min) 
-             *  sixtieths around the clock face. The hour hand is
-             *  (hour + min/60) twelfths of the way around the
-             *  clock-face.  The derivation is left as an excercise
-             *  for the reader.
-             */
-        
-            /*
-             *  12 hour clock.
-             */
-            if (tm.tm_hour > 12) {
-                tm.tm_hour -= 12;
-            }
 
-            if (numSegs == 0 ||    tm.tm_min != otm.tm_min ||
-                tm.tm_hour != otm.tm_hour) {
+    /*
+     *  The second (or minute) hand is sec (or min) 
+     *  sixtieths around the clock face. The hour hand is
+     *  (hour + min/60) twelfths of the way around the
+     *  clock-face.  The derivation is left as an excercise
+     *  for the reader.
+     */
         
-                segBufPtr = segBuf;
-                numSegs = 0;
-        
-                if (clockMode == CAT_CLOCK) {
-                    DrawClockFace(secondHandLength, radius);
-                }
-        
-                /*
-                 *  Calculate the minute hand, fill it in with its
-                 *  color and then outline it.  Next, do the same
-                 *  with the hour hand.  This is a cheap hidden
-                 *  line algorithm.
-                 */
-                DrawHand(minuteHandLength, handWidth,
-                         ((double) tm.tm_min)/60.0);
-                if (appData.handColor != appData.background) {
-                    XFillPolygon(dpy,
-                                 clockWindow, handGC,
-                                 segBuf, VERTICES_IN_HANDS + 2,
-                                 Convex, CoordModeOrigin);
-                }
-        
-                XDrawLines(dpy,
-                           clockWindow, highGC,
-                           segBuf, VERTICES_IN_HANDS + 2,
-                           CoordModeOrigin);
-        
-                DrawHand(hourHandLength, handWidth,
-                         ((((double)tm.tm_hour) + 
-                           (((double)tm.tm_min) / 60.0)) / 12.0));
-        
-                if (appData.handColor != appData.background) {
-                    XFillPolygon(dpy,
-                                 clockWindow, handGC,
-                                 &(segBuf[VERTICES_IN_HANDS + 2]),
-                                 VERTICES_IN_HANDS + 2,
-                                 Convex, CoordModeOrigin);
-                }
+    /*
+     *  12 hour clock.
+     */
+    if (tm.tm_hour > 12) {
+        tm.tm_hour -= 12;
+    }
 
-                XDrawLines(dpy,
-                           clockWindow, highGC,
-                           &(segBuf[VERTICES_IN_HANDS + 2]),
-                           VERTICES_IN_HANDS + 2,
-                           CoordModeOrigin);
-            }
-            else {
-                UpdateEyesAndTail();
-            }
+    if (numSegs == 0 ||    tm.tm_min != otm.tm_min ||
+        tm.tm_hour != otm.tm_hour) {
         
-            break;
+        segBufPtr = segBuf;
+        numSegs = 0;
+        
+        DrawClockFace(secondHandLength, radius);
+
+        /*
+         *  Calculate the minute hand, fill it in with its
+         *  color and then outline it.  Next, do the same
+         *  with the hour hand.  This is a cheap hidden
+         *  line algorithm.
+         */
+        DrawHand(minuteHandLength, handWidth,
+             ((double) tm.tm_min)/60.0);
+        if (appData.handColor != appData.background) {
+            XFillPolygon(dpy,
+                         clockWindow, handGC,
+                         segBuf, VERTICES_IN_HANDS + 2,
+                         Convex, CoordModeOrigin);
         }
+        
+        XDrawLines(dpy,
+                   clockWindow, highGC,
+                   segBuf, VERTICES_IN_HANDS + 2,
+                   CoordModeOrigin);
+        
+        DrawHand(hourHandLength, handWidth,
+                ((((double)tm.tm_hour) + 
+                  (((double)tm.tm_min) / 60.0)) / 12.0));
+        
+        if (appData.handColor != appData.background) {
+            XFillPolygon(dpy,
+                         clockWindow, handGC,
+                         &(segBuf[VERTICES_IN_HANDS + 2]),
+                         VERTICES_IN_HANDS + 2,
+                         Convex, CoordModeOrigin);
+        }
+
+        XDrawLines(dpy,
+                   clockWindow, highGC,
+                   &(segBuf[VERTICES_IN_HANDS + 2]),
+                   VERTICES_IN_HANDS + 2,
+                   CoordModeOrigin);
+    }
+    else {
+          UpdateEyesAndTail();
     }
     
     otm = tm;
     
-    if (clockMode == CAT_CLOCK) {
-        XSync(dpy, False);
-    } else {
-        XFlush(dpy);
-    }
+    XSync(dpy, False);
 }
 
 
@@ -1995,34 +1868,6 @@ static void ExitCallback(w, clientData, callData)
 {
     exit(0);
 }
-
-
-static void HandleResize(w, clientData, callData)
-    Widget     w;
-    XtPointer  clientData;
-    XtPointer  callData;
-{
-    XWindowAttributes xwa;
-    
-    XGetWindowAttributes(dpy, clockWindow, &xwa);
-
-    switch (clockMode) {
-        case CAT_CLOCK : {
-            printf("HandleResize : shouldn't have been called with cat\n");
-
-            break;
-        }
-    }
-
-    /*
-     *  Call the Tick routine so that the face gets
-     *  refreshed with the correct time.  However, call
-     *  it with arg #2 as "False", so the ticking doesn't
-     *  propagate.
-     */
-    Tick(w, False);
-}
-
 
 static void EraseHands(w, tm)
     Widget      w;

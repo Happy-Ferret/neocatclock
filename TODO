@@ -7,4 +7,5 @@ Documentation:
     ☐ Modify text (it's no longer "cat mode" since this is the only supported mode anyways).
 
 Code:
-  ☐ Remove `-mode` option.
+  ✔ Remove `-mode` option. @done(22-04-29 05:02)
+  ☐ Move `-help` output to separate file.
