@@ -1,10 +1,9 @@
 1 CATCLOCK
-analog / cat clock for X
+cat clock for X
 
 SYNOPSIS
 
   $ catclock [-toolkitoption ...] 
-             [-mode analog | cat]
              [-alarm] [-bell] [-chime] [-file filename] 
              [-hd color] [-hl color] 
              [-catcolor color] [-detailcolor color] [-tiecolor color]
@@ -13,7 +12,7 @@ SYNOPSIS
 
 2 DESCRIPTION
 The catclock 
-program displays the time in analog or cat form.
+program displays the time in cat form.
 The time is continuously updated at a frequency which may be specified 
 by the user.
 
@@ -21,13 +20,6 @@ by the user.
 Catclock
 accepts all of the standard X Toolkit command line options along with the 
 additional options listed below:
-
-    -mode  mode
-Determines display mode. Modes are analog and cat.  Analog mode
-displays a conventional 12 hour clock face with ``ticks''
-for each minute and stroke marks on each hour. Cat mode displays an image of
-the famous "Kit Cat (R)" plastic clock, complete with pendulum tail. 
-The default is analog.
  
     -alarm 
 Turns the alarm on.
@@ -89,10 +81,6 @@ printed on the standard error.
 
 2 X_DEFAULTS
 This program understands all of the usual Xt resources as well as the following:
- 
-   mode (class String)
-Specifies the display mode -- analog or cat.  The
-default is analog.
  
    alarm (class Boolean)
 Specifies whether or not the alarm should be set on startup.  The

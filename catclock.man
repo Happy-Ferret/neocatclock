@@ -5,8 +5,6 @@ catclock - analog / cat clock for X
 .ta 8n
 \fBcatclock\fP	[-\fItoolkitoption\fP ...] 
 .br
-	[-mode \fIanalog | cat\fP]
-.br
 	[-alarm] [-bell] [-chime] [-file \fIfilename\fP] 
 .br
 	[-hd \fIcolor\fP] [-hl \fIcolor\fP] 
@@ -25,13 +23,6 @@ updated at a frequency which may be specified by the user.
 .I Catclock
 accepts all of the standard X Toolkit command line options along with the 
 additional options listed below:
-.TP 8
-.B \-mode  \fImode\fP
-Determines display mode. Modes are \fIanalog\fP and \fIcat\fP.  Analog mode
-displays a conventional 12 hour clock face with ``ticks''
-for each minute and stroke marks on each hour. Cat mode displays an image of
-the famous "Kit Cat (R)" plastic clock, complete with pendulum tail. 
-The default is \fIanalog\fP.
 .TP 8
 .B \-alarm 
 Turns the alarm on.
@@ -58,15 +49,15 @@ This option specifies the color of the edges of the hands on an analog clock,
 and is only useful on color displays.  The default is \fIblack\fP.
 .TP 8
 .B \-catcolor \fIcolor\fP
-For cat mode -- determines the color of the cat's body.
+Determines the color of the cat's body.
 The default color is \fIblack\fP.
 .TP 8
 .B \-detailcolor \fIcolor\fP
-For cat mode -- determines the color of the cat's face, paws, and belly.
+Determines the color of the cat's face, paws, and belly.
 The default color is \fIwhite\fP.
 .TP 8
 .B \-tiecolor \fIcolor\fP
-For cat mode -- determines the color of the cat's tie.
+Determines the color of the cat's tie.
 The default color is \fIwhite\fP.
 .TP 8
 .B \-update \fIseconds\fP
@@ -83,7 +74,7 @@ between the window border and clock text or picture.  The default is \fI8\fP.
 Gives the period in seconds of the alarm bell (default is \fI60\fP).
 .TP 8
 .B \-ntails \fInumber\fP
-In cat mode, determines the number of tails per ``sweep'', which 
+Determines the number of tails per ``sweep'', which 
 affects the smoothness of the swinging pendulum tail. The default
 is \fI16\fP.
 .TP 8
@@ -94,10 +85,6 @@ printed on the standard error.
 .SH X DEFAULTS
 This program understands all of the usual Xt resources as well as the following:
 .PP
-.TP 8
-.B mode (\fPclass\fB String)
-Specifies the display mode -- \fIanalog\fP or \fIcat\fP.  The
-default is \fIanalog\fP.
 .TP 8
 .B alarm (\fPclass\fB Boolean)
 Specifies whether or not the alarm should be set on startup.  The

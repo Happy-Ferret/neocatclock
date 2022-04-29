@@ -6,7 +6,6 @@ XClock*foreground : black
 XClock*background : blue
 XClock*highlight  : black
 XClock*hands      : red
-XClock*mode       : cat
 XClock*update     : 1
 XClock*alarm      : off
 XClock*bell       : on

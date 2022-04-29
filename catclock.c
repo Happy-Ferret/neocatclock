@@ -61,7 +61,6 @@
 /*
  *  Icon pixmap includes
  */
-#include "analog.xbm"
 #include "cat.xbm"
 
 /*
@@ -86,7 +85,6 @@
 /*
  *  Clock Mode -- type of clock displayed
  */
-#define ANALOG_CLOCK    0               /*  Ye olde X10 catclock face     */
 #define CAT_CLOCK       2               /*  KitCat (R) clock face       */
 
 static int    clockMode;                /*  One of the above :-)        */
@@ -446,8 +444,6 @@ int main(argc, argv)
      */
     if (strcmp(appData.modeString, "cat") == 0) {
         clockMode = CAT_CLOCK;
-    } else if (strcmp(appData.modeString, "analog") == 0) {
-        clockMode = ANALOG_CLOCK;
     } else {
         clockMode = CAT_CLOCK;
     }
@@ -461,12 +457,6 @@ int main(argc, argv)
         u_int    width = 0, height = 0;
     
         switch (clockMode) {
-            case ANALOG_CLOCK : {
-                data   = analog_bits;
-                width  = analog_width;
-                height = analog_height;
-                break;
-            }
             case CAT_CLOCK : {
                 data   = cat_bits;
                 width  = cat_width;
@@ -504,24 +494,6 @@ int main(argc, argv)
      *  Set mode-dependent stuff
      */
     switch (clockMode) {
-        case ANALOG_CLOCK : {
-            /*
-             *  Padding is space between clock face and
-             *  edge of window
-             */
-            if (appData.padding == UNINIT) {
-                appData.padding = DEF_ANALOG_PADDING;
-            }
-
-            /*
-             *  Check if we should show second hand --
-             *  if greater than threshhold, don't show it
-             */
-            if (appData.update <= SECOND_HAND_TIME) {
-                showSecondHand = True;
-            }
-            break;
-        }
         case CAT_CLOCK : {
             /*
              *  Padding is space between clock face and
@@ -628,24 +600,9 @@ int main(argc, argv)
     }
 
     /*
-     *  Set the sizes of the hands for analog and cat mode
+     *  Set the sizes of the hands
      */
     switch (clockMode) {
-        case ANALOG_CLOCK : {
-            radius = (min(winWidth,
-                          winHeight) - (2 * appData.padding)) / 2;
-        
-            secondHandLength = ((SECOND_HAND_FRACT  * radius) / 100);
-            minuteHandLength = ((MINUTE_HAND_FRACT  * radius) / 100);
-            hourHandLength   = ((HOUR_HAND_FRACT    * radius) / 100);
-            handWidth        = ((HAND_WIDTH_FRACT   * radius) / 100);
-            secondHandWidth  = ((SECOND_WIDTH_FRACT * radius) / 100);
-        
-            centerX = winWidth  / 2;
-            centerY = winHeight / 2;
-        
-            break;
-        }
         case CAT_CLOCK : {
             winWidth  = DEF_CAT_WIDTH;
             winHeight = DEF_CAT_HEIGHT;
@@ -871,113 +828,6 @@ static void ParseGeometry(topLevel, stringWidth, stringAscent, stringDescent)
     geometry = malloc(80);
 
     switch (clockMode) {
-        case ANALOG_CLOCK : {
-            if (geomString == NULL) {
-                /* 
-                 *  User didn't specify any geometry, so we
-                 *  use the default.
-                 */
-                sprintf(geometry, "%dx%d",
-                        DEF_ANALOG_WIDTH, DEF_ANALOG_HEIGHT);
-            } else {
-                /*
-                 *  Gotta do some work.
-                 */
-                int x, y;
-                unsigned int width, height;
-                int geomMask;
-        
-                /*
-                 *  Find out what's been set
-                 */
-                geomMask = XParseGeometry(geomString,
-                                          &x, &y, &width, &height);
-        
-                if (geomMask == AllValues) {
-                    /*
-                     *  If width, height, x, and y have been set,
-                     *  start off with those.
-                     */
-                    strcpy(geometry, geomString);
-                } else if (geomMask & NoValue) {
-                    /*
-                     *  If none have been set (null geometry string???)
-                     *  then start with default width and height.
-                     */
-                    sprintf(geometry,
-                            "%dx%d", DEF_ANALOG_WIDTH, DEF_ANALOG_HEIGHT);
-                } else {
-                    /*
-                     *  One or more things have been set . . .
-                     *
-                     *  Check width . . .
-                     */
-                    if (!(geomMask & WidthValue)) {
-                        width = DEF_ANALOG_WIDTH;
-                    }
-                    sprintf(widthString, "%d", width);
-            
-                    /*
-                     *  Check height . . .
-                     */
-                    if (!(geomMask & HeightValue)) {
-                        height = DEF_ANALOG_HEIGHT;
-                    }
-                    sprintf(heightString, "x%d", height);
-            
-                    /*
-                     *  Check x origin . . .
-                     */
-                    if (!(geomMask & XValue)) {
-                        strcpy(xString, "");
-                    } else {
-                        /*  There is an x value - gotta do something with it */
-                        if (geomMask & XNegative) {
-                            sprintf(xString, "-%d", x);
-                        } else {
-                            sprintf(xString, "+%d", x);
-                        }
-                    }
-            
-                    /*
-                     *  Check y origin . . .
-                     */
-                    if (!(geomMask & YValue)) {
-                        strcpy(yString, "");
-                    } else {
-                        /*  There is a y value - gotta do something with it */
-                        if (geomMask & YNegative) {
-                            sprintf(yString, "-%d", y);
-                        } else {
-                            sprintf(yString, "+%d", y);
-                        }
-                    }
-            
-                    /*
-                     *  Put them all together
-                     */
-                    geometry[0] = '\0';
-                    strcat(geometry, widthString);
-                    strcat(geometry, heightString);
-                    strcat(geometry, xString);
-                    strcat(geometry, yString);
-                }
-            }
-        
-            /*
-             *  Stash the width and height in some globals (ugh!)
-             */
-            sscanf(geometry, "%dx%d", &winWidth, &winHeight);
-        
-            /*
-             *  Set the geometry of the topLevel widget
-             */
-            n = 0;
-            XtSetArg(args[n], XmNgeometry, geometry);    n++;
-            XtSetValues(topLevel, args, n);
-        
-            break; 
-        }
         case CAT_CLOCK : {
             if (geomString == NULL) {
                 /* 
@@ -1255,23 +1105,6 @@ static void DrawClockFace(secondHand, radius)
     numSegs = 0;
     
     switch (clockMode) {
-        case ANALOG_CLOCK : {
-            XClearWindow(dpy, clockWindow);
-
-            for (i = 0; i < 60; i++) {
-                DrawLine((i % 5) == 0 ? secondHand : (radius - delta),
-                         radius, ((double) i) / 60.);
-            }
-        
-            /*
-             * Go ahead and draw it.
-             */
-            XDrawSegments(dpy, clockWindow,
-                          gc, (XSegment *) segBuf,
-                          numSegs / 2);
-
-            break;
-        }
         case CAT_CLOCK : {
             XFillRectangle(dpy, clockWindow, catGC, 
                            0, 0, winWidth, winHeight);
@@ -1298,7 +1131,7 @@ static void Syntax(call)
     char *call;
 {
     printf("Usage: %s [toolkitoptions]\n", call);
-    printf("       [-mode <analog, digital, cat>]\n");
+    printf("       [-mode cat>]\n");
     printf("       [-alarm]  [-bell]  [-chime]\n");
     printf("       [-file <alarm file>]  [-period <seconds>]\n");
     printf("       [-hl <color>]  [-hd <color>]\n");
@@ -1806,13 +1639,6 @@ static void HandleExpose(w, clientData, _callData)
      *  Redraw the clock face in the correct mode
      */
     switch (clockMode) {
-        case ANALOG_CLOCK : {
-            if (numSegs != 0) {
-                EraseHands(w, (struct tm *)NULL);
-            }
-            DrawClockFace(secondHandLength, radius);
-            break;
-        }
         case CAT_CLOCK : {
             DrawClockFace(secondHandLength, radius);
             break;
@@ -1855,21 +1681,6 @@ static void Tick(w, add)
      */
     if (add) {
         switch (clockMode) {
-            case ANALOG_CLOCK  : {
-                if (evenUpdate) {
-                    int    t1, t2;
-
-                    t1 = appData.update - tm.tm_sec;
-                    t2 = (tm.tm_sec / appData.update) * appData.update;
-                    t1 += t2;
-                    XtAppAddTimeOut(appContext, t1 * 1000,
-                                    Tick, w);
-                } else {
-                    XtAppAddTimeOut(appContext, appData.update * 1000,
-                                    Tick, w);
-                }
-                break;
-            }
             case CAT_CLOCK : {
                 XtAppAddTimeOut(appContext, appData.update, Tick, w);
                 break;
@@ -1894,7 +1705,6 @@ static void Tick(w, add)
     }
     
     switch (clockMode) {
-        case ANALOG_CLOCK : 
         case CAT_CLOCK    : {
             /*
              *  The second (or minute) hand is sec (or min) 
@@ -1909,10 +1719,6 @@ static void Tick(w, add)
              */
             if (tm.tm_hour > 12) {
                 tm.tm_hour -= 12;
-            }
-        
-            if (clockMode == ANALOG_CLOCK) {
-                EraseHands((Widget)NULL, &tm);
             }
 
             if (numSegs == 0 ||    tm.tm_min != otm.tm_min ||
@@ -1963,29 +1769,7 @@ static void Tick(w, add)
                            VERTICES_IN_HANDS + 2,
                            CoordModeOrigin);
             }
-        
-            if (clockMode == ANALOG_CLOCK) {
-                if (showSecondHand) {
-                    numSegs = 2 * (VERTICES_IN_HANDS + 2);
-                    segBufPtr = &(segBuf[numSegs]);
-
-                    DrawSecond(secondHandLength - 2, secondHandWidth,
-                               minuteHandLength + 2,
-                               ((double)tm.tm_sec) / 60.0);
-
-                    if (appData.handColor != appData.background) {
-                        XFillPolygon(dpy, clockWindow, handGC,
-                                     &(segBuf[(VERTICES_IN_HANDS + 2) * 2]),
-                                     VERTICES_IN_HANDS * 2 - 1,
-                                     Convex, CoordModeOrigin);
-                    }
-            
-                    XDrawLines(dpy, clockWindow, highGC,
-                               &(segBuf[(VERTICES_IN_HANDS + 2) * 2]),
-                               VERTICES_IN_HANDS * 2 - 1,
-                               CoordModeOrigin);
-                }
-            } else {
+            else {
                 UpdateEyesAndTail();
             }
         
@@ -2223,29 +2007,6 @@ static void HandleResize(w, clientData, callData)
     XGetWindowAttributes(dpy, clockWindow, &xwa);
 
     switch (clockMode) {
-        case ANALOG_CLOCK : {
-            if ((xwa.width != winWidth) || (xwa.height != winHeight)) {
-                winWidth  = xwa.width;
-                winHeight = xwa.height;
-        
-                radius = (min(winWidth,
-                              winHeight) - (2 * appData.padding)) / 2;
-        
-                secondHandLength = ((SECOND_HAND_FRACT  * radius) / 100);
-                minuteHandLength = ((MINUTE_HAND_FRACT  * radius) / 100);
-                hourHandLength   = ((HOUR_HAND_FRACT    * radius) / 100);
-        
-                handWidth        = ((HAND_WIDTH_FRACT   * radius) / 100);
-                secondHandWidth  = ((SECOND_WIDTH_FRACT * radius) / 100);
-
-                centerX = winWidth  / 2;
-                centerY = winHeight / 2;
-
-                DrawClockFace(secondHandLength, radius);
-            }
-
-            break;
-        }
         case CAT_CLOCK : {
             printf("HandleResize : shouldn't have been called with cat\n");
 
