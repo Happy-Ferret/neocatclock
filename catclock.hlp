@@ -1,10 +1,10 @@
 1 CATCLOCK
-analog / digital / cat clock for X
+analog / cat clock for X
 
 SYNOPSIS
 
   $ catclock [-toolkitoption ...] 
-             [-mode analog | digital | cat]
+             [-mode analog | cat]
              [-alarm] [-bell] [-chime] [-file filename] 
              [-hd color] [-hl color] 
              [-catcolor color] [-detailcolor color] [-tiecolor color]
@@ -13,9 +13,9 @@ SYNOPSIS
 
 2 DESCRIPTION
 The catclock 
-program displays the time in analog, digital, or cat form.  
+program displays the time in analog or cat form.
 The time is continuously updated at a frequency which may be specified 
-by the user.  
+by the user.
 
 2 OPTIONS
 Catclock
@@ -23,10 +23,9 @@ accepts all of the standard X Toolkit command line options along with the
 additional options listed below:
 
     -mode  mode
-Determines display mode. Modes are analog, digital, and cat.  Analog mode
+Determines display mode. Modes are analog and cat.  Analog mode
 displays a conventional 12 hour clock face with ``ticks''
-for each minute and stroke marks on each hour. Digital mode displays an
-ascii string corresponding to the time. Cat mode displays an image of
+for each minute and stroke marks on each hour. Cat mode displays an image of
 the famous "Kit Cat (R)" plastic clock, complete with pendulum tail. 
 The default is analog.
  
@@ -74,8 +73,7 @@ second hand on an analog clock.  The default is 60.
  
     -padding number
 This option specifies the width in pixels of the padding 
-between the window border and clock text or picture.  The default is 10
-on a digital clock and 8 on an analog clock.
+between the window border and clock picture.  The default is 8.
  
     -period seconds
 Gives the period in seconds of the alarm bell (default is 60).
@@ -93,7 +91,7 @@ printed on the standard error.
 This program understands all of the usual Xt resources as well as the following:
  
    mode (class String)
-Specifies the display mode -- analog, digital, or cat.  The
+Specifies the display mode -- analog or cat.  The
 default is analog.
  
    alarm (class Boolean)

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		666132331BC06D340091BAB4 /* alarm.c in Sources */ = {isa = PBXBuildFile; fileRef = 666132311BC06D340091BAB4 /* alarm.c */; settings = {COMPILER_FLAGS = "-Wno-nullability-completeness"; }; };
-		666132341BC06D340091BAB4 /* xclock.c in Sources */ = {isa = PBXBuildFile; fileRef = 666132321BC06D340091BAB4 /* xclock.c */; settings = {COMPILER_FLAGS = "-Wno-nullability-completeness"; }; };
+		666132341BC06D340091BAB4 /* catclock.c in Sources */ = {isa = PBXBuildFile; fileRef = 666132321BC06D340091BAB4 /* catclock.c */; settings = {COMPILER_FLAGS = "-Wno-nullability-completeness"; }; };
 		666132431BC06E480091BAB4 /* libX11.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 666132401BC06E480091BAB4 /* libX11.a */; };
 		666132441BC06E480091BAB4 /* libXext.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 666132411BC06E480091BAB4 /* libXext.a */; };
 		666132451BC06E480091BAB4 /* libXm.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 666132421BC06E480091BAB4 /* libXm.a */; };
@@ -32,7 +32,7 @@
 		6661322F1BC06D340091BAB4 /* alarm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = alarm.h; sourceTree = SOURCE_ROOT; };
 		666132301BC06D340091BAB4 /* patchlevel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = patchlevel.h; sourceTree = SOURCE_ROOT; };
 		666132311BC06D340091BAB4 /* alarm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = alarm.c; sourceTree = SOURCE_ROOT; };
-		666132321BC06D340091BAB4 /* xclock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = xclock.c; sourceTree = SOURCE_ROOT; };
+		666132321BC06D340091BAB4 /* catclock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = catclock.c; sourceTree = SOURCE_ROOT; };
 		666132361BC06D4B0091BAB4 /* analog.xbm */ = {isa = PBXFileReference; lastKnownFileType = text; path = analog.xbm; sourceTree = "<group>"; };
 		666132371BC06D4B0091BAB4 /* bell.xbm */ = {isa = PBXFileReference; lastKnownFileType = text; path = bell.xbm; sourceTree = "<group>"; };
 		666132381BC06D4B0091BAB4 /* cat.xbm */ = {isa = PBXFileReference; lastKnownFileType = text; path = cat.xbm; sourceTree = "<group>"; };
@@ -46,9 +46,9 @@
 		666132411BC06E480091BAB4 /* libXext.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libXext.a; path = ../../../../opt/local/lib/libXext.a; sourceTree = "<group>"; };
 		666132421BC06E480091BAB4 /* libXm.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libXm.a; path = ../../../../opt/local/lib/libXm.a; sourceTree = "<group>"; };
 		666132461BC06E650091BAB4 /* libXt.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libXt.a; path = ../../../../opt/local/lib/libXt.a; sourceTree = "<group>"; };
-		666132491BC06EB60091BAB4 /* xclock.xclock */ = {isa = PBXFileReference; lastKnownFileType = text; path = xclock.xclock; sourceTree = "<group>"; };
-		6661324B1BC06EC70091BAB4 /* xclock.man */ = {isa = PBXFileReference; lastKnownFileType = text; path = xclock.man; sourceTree = "<group>"; };
-		6661324E1BC06EF80091BAB4 /* xclock.ad */ = {isa = PBXFileReference; lastKnownFileType = text; path = xclock.ad; sourceTree = "<group>"; };
+		666132491BC06EB60091BAB4 /* catclock.catclock */ = {isa = PBXFileReference; lastKnownFileType = text; path = catclock.catclock; sourceTree = "<group>"; };
+		6661324B1BC06EC70091BAB4 /* catclock.man */ = {isa = PBXFileReference; lastKnownFileType = text; path = catclock.man; sourceTree = "<group>"; };
+		6661324E1BC06EF80091BAB4 /* catclock.ad */ = {isa = PBXFileReference; lastKnownFileType = text; path = catclock.ad; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,7 +72,7 @@
 				666132311BC06D340091BAB4 /* alarm.c */,
 				6661322F1BC06D340091BAB4 /* alarm.h */,
 				666132301BC06D340091BAB4 /* patchlevel.h */,
-				666132321BC06D340091BAB4 /* xclock.c */,
+				666132321BC06D340091BAB4 /* catclock.c */,
 			);
 			name = catclock;
 			sourceTree = "<group>";
@@ -128,7 +128,7 @@
 		666132481BC06E920091BAB4 /* Alarm File */ = {
 			isa = PBXGroup;
 			children = (
-				666132491BC06EB60091BAB4 /* xclock.xclock */,
+				666132491BC06EB60091BAB4 /* catclock.catclock */,
 			);
 			name = "Alarm File";
 			sourceTree = "<group>";
@@ -136,7 +136,7 @@
 		6661324A1BC06EBF0091BAB4 /* Man Page */ = {
 			isa = PBXGroup;
 			children = (
-				6661324B1BC06EC70091BAB4 /* xclock.man */,
+				6661324B1BC06EC70091BAB4 /* catclock.man */,
 			);
 			name = "Man Page";
 			sourceTree = "<group>";
@@ -144,7 +144,7 @@
 		6661324D1BC06EDA0091BAB4 /* Application Defaults */ = {
 			isa = PBXGroup;
 			children = (
-				6661324E1BC06EF80091BAB4 /* xclock.ad */,
+				6661324E1BC06EF80091BAB4 /* catclock.ad */,
 			);
 			name = "Application Defaults";
 			sourceTree = "<group>";
@@ -207,7 +207,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				666132331BC06D340091BAB4 /* alarm.c in Sources */,
-				666132341BC06D340091BAB4 /* xclock.c in Sources */,
+				666132341BC06D340091BAB4 /* catclock.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,8 +1,8 @@
-/*  $Header: /nfs/kodak/kc1/pjs/src/X11/catclock/motif/RCS/xclock.c,v 1.7 91/11/26 11:46:54 pjs Exp Locker: pjs $ */
+/*  $Header: /nfs/kodak/kc1/pjs/src/X11/catclock/motif/RCS/catclock.c,v 1.7 91/11/26 11:46:54 pjs Exp Locker: pjs $ */
 /*  Copyright 1985 Massachusetts Institute of Technology */
 
 /*
- *  xclock.c MIT Project Athena, X Window system clock.
+ *  catclock.c MIT Project Athena, X Window system clock.
  *
  *  This program provides the user with a small
  *  window contining a digital clock with day and date.
@@ -21,6 +21,8 @@
 #include <math.h>
 #include <pwd.h>
 #include <unistd.h>
+
+#include <gtk/gtk.h>
 
 /*
  *  X11 includes
@@ -60,7 +62,6 @@
  *  Icon pixmap includes
  */
 #include "analog.xbm"
-#include "digital.xbm"
 #include "cat.xbm"
 
 /*
@@ -85,8 +86,7 @@
 /*
  *  Clock Mode -- type of clock displayed
  */
-#define ANALOG_CLOCK    0               /*  Ye olde X10 xclock face     */
-#define DIGITAL_CLOCK   1               /*  ASCII clock                 */
+#define ANALOG_CLOCK    0               /*  Ye olde X10 catclock face     */
 #define CAT_CLOCK       2               /*  KitCat (R) clock face       */
 
 static int    clockMode;                /*  One of the above :-)        */
@@ -120,11 +120,6 @@ static GC       eyeGC;                    /*  For drawing cat's eyes    */
 #define DEF_ANALOG_HEIGHT   164           /*  reasons :-)               */
 
 /*
- *  Digital time string origin
- */
-static int     digitalX, digitalY;
-
-/*
  *  Clock hand stuff
  */
 #define VERTICES_IN_HANDS    4             /*  Hands are triangles      */
@@ -150,23 +145,22 @@ static int     secondHandWidth;
 #define SEG_BUFF_SIZE        128                /*  Max buffer size     */
 static int      numSegs = 0;                    /*  Segments in buffer  */
 static XPoint   segBuf[SEG_BUFF_SIZE];          /*  Buffer              */
-static XPoint   *segBufPtr = (XPoint *)NULL;    /*  Current pointer     */
-
-/*
- *  Default font for digital display
- */
-#define DEF_DIGITAL_FONT    "fixed"        
+static XPoint   *segBufPtr = (XPoint *)NULL;    /*  Current pointer     */    
 
 /*
  *  Padding defaults
  */
-#define DEF_DIGITAL_PADDING     10      /*  Space around time display   */
 #define DEF_ANALOG_PADDING      8       /*  Radius padding for analog   */
+
+/*
+ *  Default font for digital display
+ */
+#define DEF_DIGITAL_FONT    "fixed"    
 
 /*
  *  Alarm stuff
  */
-#define DEF_ALARM_FILE        "/.Xclock"        /*  Alarm settings file */
+#define DEF_ALARM_FILE        "/.Catclock"        /*  Alarm settings file */
 #define DEF_ALARM_PERIOD    60        
 
 static Boolean  alarmOn    = False;     /*  Alarm set?                  */
@@ -264,7 +258,6 @@ static int direction = 1;
 
 static void ParseGeometry(Widget, int, int, int);
 static int Round(double);
-static void DigitalString(char *);
 static void Syntax(char *);
 static void InitializeCat(Pixel, Pixel, Pixel);
 static GC CreateTailGC(void);
@@ -411,7 +404,7 @@ int main(argc, argv)
     /* 
      *  Hack to make Saber-C work with Xt correctly
      */
-    argv[0] = "xclock";
+    argv[0] = "catclock";
 
     /*
      *  Open up the system
@@ -455,10 +448,8 @@ int main(argc, argv)
         clockMode = CAT_CLOCK;
     } else if (strcmp(appData.modeString, "analog") == 0) {
         clockMode = ANALOG_CLOCK;
-    } else if (strcmp(appData.modeString, "digital") == 0) {
-        clockMode = DIGITAL_CLOCK;
     } else {
-        clockMode = ANALOG_CLOCK;
+        clockMode = CAT_CLOCK;
     }
 
     /*
@@ -482,12 +473,6 @@ int main(argc, argv)
                 height = cat_height;
                 break;
             }
-            case DIGITAL_CLOCK : {
-                data   = digital_bits;
-                width  = digital_width;
-                height = digital_height;
-                break;
-            }
         }
 
         iconPixmap = XCreateBitmapFromData(dpy, root,
@@ -504,14 +489,14 @@ int main(argc, argv)
         appData.font = XLoadQueryFont(dpy, DEF_DIGITAL_FONT);
         if (appData.font == (XFontStruct *)NULL) {
             fprintf(stderr,
-                    "xclock : Unable to load default font %s. Please re-run with another font\n",
+                    "catclock : Unable to load default font %s. Please re-run with another font\n",
                     DEF_DIGITAL_FONT);
             exit(-1);
         }
     }
     fontList = XmFontListCreate(appData.font, XmSTRING_ISO8859_1);
     if (fontList == (XmFontList)NULL) {
-        fprintf(stderr, "xclock : Unable to create font list -- exiting\n");
+        fprintf(stderr, "catclock : Unable to create font list -- exiting\n");
         exit(-1);
     }
 
@@ -569,42 +554,6 @@ int main(argc, argv)
 
             break;
         }
-        case DIGITAL_CLOCK : {
-            char    *timePtr;
-            time_t    timeValue;
-            int        stringDir;
-            XCharStruct    xCharStr;
-
-            /*
-             *  Padding is around time text
-             */
-            if (appData.padding == UNINIT) {
-                appData.padding = DEF_DIGITAL_PADDING;
-            }
-
-            /*
-             *  Check if we should show second hand --
-             *  if greater than threshhold, don't show it
-             */
-            if (appData.update >= 60) {
-                noSeconds = True;
-            }
-        
-            /*
-             * Get font dependent information and determine window
-             * size from a test string.
-             */
-            time(&timeValue);
-            timePtr = ctime(&timeValue);
-            DigitalString(timePtr);
-
-            XTextExtents(appData.font, timePtr, (int)strlen(timePtr),
-                         &stringDir, &stringAscent, &stringDescent, &xCharStr);
-
-            stringWidth = XTextWidth(appData.font, timePtr, (int)strlen(timePtr));
-        
-            break;
-        }
     }
     
     /*
@@ -618,7 +567,7 @@ int main(argc, argv)
     ParseGeometry(topLevel, stringWidth, stringAscent, stringDescent);
 
     /*
-     *  Create widgets for xclock :
+     *  Create widgets for catclock :
      *
      *
      *  Outermost widget is a form widget.
@@ -1029,142 +978,6 @@ static void ParseGeometry(topLevel, stringWidth, stringAscent, stringDescent)
         
             break; 
         }
-        case DIGITAL_CLOCK : {
-            int     minWidth, minHeight;
-            int     bellWidth, bellHeight;
-        
-            /*
-             *  Size depends on the bell icon size
-             */
-            GetBellSize(&bellWidth, &bellHeight);
-        
-            digitalX = appData.padding + bellWidth;
-            digitalY = appData.padding + stringAscent;
-        
-            minWidth = (2 * digitalX) + stringWidth;
-            minHeight = digitalY + appData.padding + stringDescent;
-        
-            if (geomString == NULL) {
-                /* 
-                 *  User didn't specify any geometry, so we
-                 *  use the default.
-                 */
-                sprintf(geometry, "%dx%d", minWidth, minHeight);
-            } else {
-                /*
-                 *  Gotta do some work.
-                 */
-                int          x, y;
-                unsigned int width, height;
-                int          geomMask;
-        
-                /*
-                 *  Find out what's been set
-                 */
-                geomMask = XParseGeometry(geomString,
-                                          &x, &y, &width, &height);
-        
-                if (geomMask == AllValues) {
-                    /*
-                     *  If width, height, x, and y have been set,
-                     *  start off with those.
-                     */
-                    strcpy(geometry, geomString);
-            
-                    digitalX = (int)(0.5 + width / 2.0 - stringWidth / 2.0);
-                    if (digitalX < bellWidth + appData.padding) {
-                        digitalX = bellWidth + appData.padding;
-                    }
-            
-                    digitalY = (int)(0.5 + height/2.0 +
-                                     appData.font->max_bounds.ascent / 2.0);
-                    if (digitalY < 0) {
-                        digitalY = 0;
-                    }
-                } else if (geomMask & NoValue) {
-                    /*
-                     *  If none have been set (null geometry string???)
-                     *  then start with default width and height.
-                     */
-                    sprintf(geometry,
-                            "%dx%d", minWidth, minHeight);
-                } else {
-                    /*
-                     *  One or more things have been set . . .
-                     *
-                     *  Check width . . .
-                     */
-                    if (!(geomMask & WidthValue)) {
-                        width = minWidth;
-                    } else {
-                        digitalX = (int)(0.5 + max(width, minWidth) / 2.0 -
-                                         stringWidth / 2.0);
-                    }
-                    sprintf(widthString, "%d", width);
-            
-                    /*
-                     *  Check height . . .
-                     */
-                    if (!(geomMask & HeightValue)) {
-                        height = minHeight;
-                    }  else {
-                        digitalY = (int)(0.5 + max(height, minHeight) / 2.0 +
-                                         appData.font->max_bounds.ascent/2.0);
-            
-                    }
-                    sprintf(heightString, "x%d", height);
-            
-                    /*
-                     *  Check x origin . . .
-                     */
-                    if (!(geomMask & XValue)) {
-                        strcpy(xString, "");
-                    } else {
-                        if (geomMask & XNegative) {
-                            sprintf(xString, "-%d", x);
-                        } else {
-                            sprintf(xString, "+%d", x);
-                        }
-                    }
-            
-                    /*
-                     *  Check y origin . . .
-                     */
-                    if (!(geomMask & YValue)) {
-                        strcpy(yString, "");
-                    } else {
-                        if (geomMask & YNegative) {
-                            sprintf(yString, "-%d", y);
-                        } else {
-                            sprintf(yString, "+%d", y);
-                        }
-                    }
-            
-                    /*
-                     *  Put them all together
-                     */
-                    geometry[0] = '\0';
-                    strcat(geometry, widthString);
-                    strcat(geometry, heightString);
-                    strcat(geometry, xString);
-                    strcat(geometry, yString);
-                }
-            }
-        
-            /*
-             *  Stash the width and height in some globals (ugh!)
-             */
-            sscanf(geometry, "%dx%d", &winWidth, &winHeight);
-        
-            /*
-             *  Set the geometry of the topLevel widget
-             */
-            n = 0;
-            XtSetArg(args[n], XmNgeometry,  geometry);    n++;
-            XtSetValues(topLevel, args, n);
-        
-            break; 
-        }
         case CAT_CLOCK : {
             if (geomString == NULL) {
                 /* 
@@ -1465,11 +1278,6 @@ static void DrawClockFace(secondHand, radius)
 
             break;
         }
-        case DIGITAL_CLOCK : {
-            XClearWindow(dpy, clockWindow);
-
-            break;
-        }
     }
     
     segBufPtr = segBuf;
@@ -1483,27 +1291,8 @@ static int Round(x)
     return (x >= 0.0 ? (int)(x + 0.5) : (int)(x - 0.5));
 }
 
-static void DigitalString(str)
-    char *str;
-{
-    char *cp;
-    
-    str[24] = 0;
-
-    if (str[11] == '0') {
-        str[11] = ' ';
-    }
-
-    if (noSeconds) {
-        str += 16;
-        cp = str + 3;
-        while ((*str++ = *cp++));
-    }
-}
-
-
 /*
- * Report the syntax for calling xclock.
+ * Report the syntax for calling catclock.
  */
 static void Syntax(call)
     char *call;
@@ -2028,10 +1817,6 @@ static void HandleExpose(w, clientData, _callData)
             DrawClockFace(secondHandLength, radius);
             break;
         }
-        case DIGITAL_CLOCK : {
-            DrawClockFace(secondHandLength, radius);
-            break;
-        }
     }
 
     /*
@@ -2070,8 +1855,7 @@ static void Tick(w, add)
      */
     if (add) {
         switch (clockMode) {
-            case ANALOG_CLOCK  :
-            case DIGITAL_CLOCK : {
+            case ANALOG_CLOCK  : {
                 if (evenUpdate) {
                     int    t1, t2;
 
@@ -2205,16 +1989,6 @@ static void Tick(w, add)
                 UpdateEyesAndTail();
             }
         
-            break;
-        }
-        case DIGITAL_CLOCK : {
-            char *timePtr;
-        
-            timePtr = asctime(&tm);
-            DigitalString(timePtr);
-            XDrawImageString(dpy, clockWindow, gc,
-                             digitalX, digitalY,
-                             timePtr, (int)strlen(timePtr));
             break;
         }
     }
@@ -2475,45 +2249,6 @@ static void HandleResize(w, clientData, callData)
         case CAT_CLOCK : {
             printf("HandleResize : shouldn't have been called with cat\n");
 
-            break;
-        }
-        case DIGITAL_CLOCK : {
-            int            stringWidth, stringHeight;
-            int            ascent, descent;
-            int            stringDir;
-            XCharStruct    xCharStr;
-            char           *timePtr;
-            time_t         timeValue;
-            int            bellWidth, bellHeight;
-
-            /*
-             * Get font dependent information and determine window
-             * size from a test string.
-             */
-            time(&timeValue);
-            timePtr = ctime(&timeValue);
-            DigitalString(timePtr);
-
-            XTextExtents(appData.font, timePtr, (int)strlen(timePtr),
-                         &stringDir, &ascent, &descent, &xCharStr);
-        
-            stringHeight = ascent + descent;
-            stringWidth = XTextWidth(appData.font, timePtr, (int)strlen(timePtr));
-        
-            GetBellSize(&bellWidth, &bellHeight);
-        
-            digitalX = (int)(0.5 + (xwa.width / 2.0 - stringWidth / 2.0));
-            if (digitalX < bellWidth + appData.padding) {
-                digitalX = bellWidth + appData.padding;
-            }
-        
-            digitalY = (int)(0.5 + (xwa.height - stringHeight) / 2.0 + ascent);
-            if (digitalY < 0) {
-                digitalY = 0;
-            }
-
-            DrawClockFace(secondHandLength, radius);
-        
             break;
         }
     }

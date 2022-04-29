@@ -1,0 +1,7 @@
+
+Documentation:
+  ☐ Update README.md
+    ☐ Update name
+    ☐ Update build instructions and dependencies.
+    ☐ Remove mentions of X Window System reliance.
+    ☐ Modify text (it's no longer "cat mode" since this is the only supported mode anyways).
